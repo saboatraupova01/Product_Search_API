@@ -1,0 +1,41 @@
+{
+    "mappings": {
+        "properties": {
+            "id": {
+                "type": "long"
+            },
+            "name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            "description": {
+                "type": "text"
+            },
+            "category": {
+                "type": "keyword"
+            },
+            "brand": {
+                "type": "keyword"
+            },
+            "price": {
+                "type": "double"
+            },
+            "quantity": {
+                "type": "integer"
+            },
+            "rating": {
+                "type": "float"
+            },
+            "is_active": {
+                "type": "boolean"
+            },
+            "created_at": {
+                "type": "date"
+            }
+        }
+    }
+}

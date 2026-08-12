@@ -1,0 +1,119 @@
+services:
+
+    app:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        container_name: product-search-app
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - db
+            - elasticsearch
+        networks:
+            - product-network
+
+    scheduler:
+        build:
+            context: .
+            dockerfile: docker/scheduler/Dockerfile
+        container_name: product-search-scheduler
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - db
+            - elasticsearch
+        networks:
+            - product-network
+    nginx:
+        image: nginx:1.27-alpine
+        container_name: product-search-nginx
+        restart: unless-stopped
+        ports:
+            - "8000:80"
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        depends_on:
+            - app
+        networks:
+            - product-network
+
+    db:
+        image: mysql:8.4
+        container_name: product-search-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: product_catalog
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: secret
+        ports:
+            - "3306:3306"
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - product-network
+
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+        container_name: product-search-elasticsearch
+        restart: unless-stopped
+        environment:
+            - cluster.name=docker-cluster
+            - node.name=elasticsearch-1
+            - discovery.seed_hosts=elasticsearch-2
+            - xpack.security.enabled=false
+            - ES_JAVA_OPTS=-Xms1g -Xmx1g
+            - path.repo=/usr/share/elasticsearch/snapshots
+        ports:
+            - "9200:9200"
+        volumes:
+            - elastic-data:/usr/share/elasticsearch/data
+            - elasticsearch_snapshots:/usr/share/elasticsearch/snapshots
+        networks:
+            - product-network
+
+    elasticsearch-2:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+        container_name: product-search-elasticsearch-2
+        restart: unless-stopped
+        environment:
+            - cluster.name=docker-cluster
+            - node.name=elasticsearch-2
+            - discovery.seed_hosts=elasticsearch
+            - xpack.security.enabled=false
+            - ES_JAVA_OPTS=-Xms1g -Xmx1g
+            - path.repo=/usr/share/elasticsearch/snapshots
+        volumes:
+            - elastic-data-2:/usr/share/elasticsearch/data
+            - elasticsearch_snapshots:/usr/share/elasticsearch/snapshots
+        networks:
+            - product-network
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:8.14.3
+        container_name: product-search-kibana
+        restart: unless-stopped
+        environment:
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+        ports:
+            - "5601:5601"
+        depends_on:
+            - elasticsearch
+        networks:
+            - product-network
+
+volumes:
+    db-data:
+    elastic-data:
+    elastic-data-2:
+    elasticsearch_snapshots:
+
+networks:
+    product-network:
+        driver: bridge
