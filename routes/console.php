@@ -10,5 +10,5 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('app:sync-products')
-    ->hourly()
+    ->everyTenMinutes()
     ->withoutOverlapping();
