@@ -29,16 +29,19 @@ REST API для поиска товаров на Laravel с использова
 ```bash
 docker compose up -d --build
 ```
+
 ## Генерация 100000 товаров и сохраняет в файле products.jsonl
 
 ```bash
 docker compose exec app php artisan products:generate --count=100000 
 ```
+
 ## Отправка товаров из файла в ElasticSearch
 
 ```bash
 docker compose exec app php artisan products:index
 ```
+
 ## Импорт данных из Elasticsearch в MySQL
 
 ```bash
